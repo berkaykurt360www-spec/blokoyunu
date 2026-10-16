@@ -58,7 +58,7 @@
         const gameOverEl = document.getElementById("game-over");
         const containerEl = document.getElementById("pieces-container");
 
-        // Blok şekilleri tanımları (Dinamik Grid Yapıları)
+        // Blok şekilleri tanımları
         const SHAPES = [
             { id: 1, grid: [[1]] }, 
             { id: 2, grid: [[1,1]] }, 
@@ -94,9 +94,11 @@
             for (let r = 0; r < GRID_SIZE; r++) {
                 for (let c = 0; c < GRID_SIZE; c++) {
                     const idx = r * GRID_SIZE + c;
-                    cells[idx].className = "cell";
-                    if (board[r][c] > 0) {
-                        cells[idx].classList.add("filled-" + board[r][c]);
+                    if(cells[idx]) {
+                        cells[idx].className = "cell";
+                        if (board[r][c] > 0) {
+                            cells[idx].classList.add("filled-" + board[r][c]);
+                        }
                     }
                 }
             }
@@ -105,12 +107,12 @@
             containerEl.innerHTML = "";
             const sampleShapes = [
                 [[1]], 
-                [[2, 2]], 
-                [[3], [3]], 
-                [[4, 4], [4, 4]], 
-                [[5, 5, 5]], 
+                [[1, 1]], 
+                [[1], [1]], 
+                [[1, 1], [1, 1]], 
+                [[1, 1, 1]], 
                 [[1], [1], [1]], 
-                [[2, 0], [2, 2]]
+                [[1, 1], [1, 0]]
             ];
 
             for (let i = 0; i < 3; i++) {
@@ -131,7 +133,7 @@
                     row.forEach(val => {
                         const cell = document.createElement("div");
                         if (val > 0) {
-                            cell.classList.add("piece-cell", "filled-" + val);
+                            cell.classList.add("piece-cell", "filled-" + (randomIdx % 5 + 1));
                         } else {
                             cell.style.visibility = "hidden";
                         }
@@ -155,8 +157,8 @@
                 e.preventDefault();
                 piece.classList.add("dragging");
                 
-                const clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+                const clientX = e.type === "touchstart" ? e.touches[clientX] : e.clientX;
+                const clientY = e.type === "touchstart" ? e.touches[clientY] : e.clientY;
                 
                 const rect = piece.getBoundingClientRect();
                 startX = clientX - rect.left;
@@ -173,8 +175,8 @@
 
             function dragMove(e) {
                 e.preventDefault();
-                const clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-                const clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+                const clientX = e.type === "touchmove" ? e.touches[clientX] : e.clientX;
+                const clientY = e.type === "touchmove" ? e.touches[clientY] : e.clientY;
                 
                 piece.style.left = (clientX - startX) + "px";
                 piece.style.top = (clientY - startY) + "px";
@@ -202,7 +204,7 @@
                     const targetCol = parseInt(cell.dataset.col);
 
                     if (canPlaceShape(currentGrid, targetRow, targetCol)) {
-                        placeShape(currentGrid, targetRow, targetCol);
+                        placeShape(currentGrid, targetRow, targetCol, (parseInt(piece.dataset.shapeIndex) % 5 + 1));
                         piece.parentElement.innerHTML = ""; 
                         checkMatches();
 
@@ -234,11 +236,11 @@
             return true;
         }
 
-        function placeShape(grid, row, col) {
+        function placeShape(grid, row, col, id) {
             for (let r = 0; r < grid.length; r++) {
                 for (let c = 0; c < grid[r].length; c++) {
                     if (grid[r][c] > 0) {
-                        board[row + r][col + c] = grid[r][c];
+                        board[row + r][col + c] = id;
                     }
                 }
             }
@@ -268,14 +270,16 @@
 
                 rowsToBlast.forEach(r => {
                     for (let c = 0; c < GRID_SIZE; c++) {
-                        cells[r * GRID_SIZE + c].classList.add("blast-effect");
+                        const idx = r * GRID_SIZE + c;
+                        if (cells[idx]) cells[idx].classList.add("blast-effect");
                         board[r][c] = 0;
                     }
                 });
 
                 colsToBlast.forEach(c => {
                     for (let r = 0; r < GRID_SIZE; r++) {
-                        cells[r * GRID_SIZE + c].classList.add("blast-effect");
+                        const idx = r * GRID_SIZE + c;
+                        if (cells[idx]) cells[idx].classList.add("blast-effect");
                         board[r][c] = 0;
                     }
                 });
@@ -303,7 +307,7 @@
             if (pieces.length === 0) return false;
 
             const sampleShapes = [
-                [[1]], [[2, 2]], [[3], [3]], [[4, 4], [4, 4]], [[5, 5, 5]], [[1], [1], [1]], [[2, 0], [2, 2]]
+                [[1]], [[1, 1]], [[1], [1]], [[1, 1], [1, 1]], [[1, 1, 1]], [[1], [1], [1]], [[1, 1], [1, 0]]
             ];
 
             let anyMoveLeft = false;
